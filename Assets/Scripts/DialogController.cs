@@ -6,8 +6,12 @@ public class DialogController : MonoBehaviour
     [SerializeField] private DialogView dialogView;
     [SerializeField] private DialogModel dialogModel;
 
-    private readonly string[] _questions = {"Test question 1"};
-    private readonly string[][] _answers = {new[] {"lol", "kek", "meme", "kross"}};
+    private readonly string[] _questions = {"Test question 1", "Test question 2"};
+
+    private readonly string[][] _answers =
+    {
+        new[] {"Answer 1", "Answer 2", "Answer 3", "Answer 4"}, new[] {"Answer 1", "Answer 2", "Answer 3", "Answer 4"}
+    };
 
     private void Awake()
     {

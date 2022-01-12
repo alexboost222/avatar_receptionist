@@ -88,12 +88,6 @@ public class DialogModel : MonoBehaviour
         _questionNumber = 0;
     }
 
-    private void NextQuestion()
-    {
-        if (_questions.Length == _questionNumber) DialogStateProp = DialogState.Finished;
-        else QuestionChanged?.Invoke(_questions[_questionNumber], _answers[_questionNumber]);
-    }
-
     public void Init(string[] questions, string[][] answers)
     {
         if (questions.Length != answers.Length)
@@ -104,5 +98,11 @@ public class DialogModel : MonoBehaviour
         _answers = answers;
 
         DialogStateProp = DialogState.NotStarted;
+    }
+
+    private void NextQuestion()
+    {
+        if (_questions.Length == _questionNumber) DialogStateProp = DialogState.Finished;
+        else QuestionChanged?.Invoke(_questions[_questionNumber], _answers[_questionNumber]);
     }
 }
