@@ -32,7 +32,7 @@ def init():
     while "stop_flag" not in from_unity and "stop_flag" not in to_unity:
         to_unity = cog_model.get(from_unity)
 
-        if "stop_flag" not in to_unity:
+        if "stop_flag" in to_unity:
             break
 
         if args.text_to_speech:

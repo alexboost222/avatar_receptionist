@@ -4,12 +4,13 @@ from transport import Transport
 def execute(j):
     print("User says: " + str(j))
     msg = input("Your answer: ")
-    answer = {"msg" : msg}
+    return {"msg": msg}
+#    answer = {"msg" : msg}
 
-    if msg == "exit":
-        answer.update({"stop_flag" : True})
+#    if msg == "exit":
+#        answer.update({"stop_flag" : True})
 
-    return answer
+#    return answer
 
 t = Transport(execute)
 t.arg_parse(sys.argv)

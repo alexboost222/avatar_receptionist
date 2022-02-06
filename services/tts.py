@@ -109,7 +109,7 @@ def handle(input):
     with open(synt_file_path, "wb") as syn_result:
         syn_result.write(synt_result)
 
-    return { "avatar_speech_filepath": syn_result }
+    return { "avatar_speech_filepath": synt_file_path }
 
 t = Transport(handle, "tts")
 
