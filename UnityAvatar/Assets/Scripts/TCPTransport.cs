@@ -1,69 +1,60 @@
 using System;
 using System.Net;
 using System.Net.Sockets;
+using System.Threading;
 using Cysharp.Threading.Tasks;
 using Newtonsoft.Json.Linq;
 using UnityEngine;
+using static System.Text.Encoding;
 
 [CreateAssetMenu]
 public class TCPTransport : ScriptableObject
 {
-    public async UniTask Init(Func<JObject, UniTask<JObject>> handler)
+    private const int BufferLength = 1024 * 2;
+    
+    public string ip;
+    public int port;
+
+    private CancellationTokenSource _cts;
+    
+    public void Init(Func<JObject, UniTask<JObject>> handler)
+    {
+        _cts = new CancellationTokenSource();
+
+        UniTask.Run(async () => await StartServer(handler), cancellationToken: _cts.Token);
+    }
+
+
+    private async UniTask StartServer(Func<JObject, UniTask<JObject>> handler)
     {
         await UniTask.SwitchToMainThread();
 
         TcpListener server=null;
         try
         {
-            // Set the TcpListener on port 13000.
-            int port = 8085;
-            var localAddr = IPAddress.Parse("127.0.0.1");
+            server = new TcpListener(IPAddress.Parse(ip), port);
 
-            // TcpListener server = new TcpListener(port);
-            server = new TcpListener(localAddr, port);
-
-            // Start listening for client requests.
             server.Start();
 
-            // Buffer for reading data
-            byte[] bytes = new byte[1024];
-
-            // Enter the listening loop.
+            byte[] bytes = new byte[BufferLength];
+            
             while(Application.isPlaying)
             {
                 Debug.Log("Waiting for a connection... ");
 
-                // Perform a blocking call to accept requests.
-                // You could also use server.AcceptSocket() here.
-                TcpClient client = await server.AcceptTcpClientAsync();
+                var client = await server.AcceptTcpClientAsync();
                 
-                Debug.Log("Connected!");
-
-                // Get a stream object for reading and writing
-                NetworkStream stream = client.GetStream();
-
+                var stream = client.GetStream();
                 int i;
-
-                // Loop to receive all the data sent by the client.
-                while((i = await stream.ReadAsync(bytes, 0, bytes.Length))!=0)
+                
+                while((i = await stream.ReadAsync(bytes, 0, bytes.Length, _cts.Token)) != 0)
                 {
-                    // Translate data bytes to a ASCII string.
-                    var data = System.Text.Encoding.UTF8.GetString(bytes, 0, i);
+                    Decode(ref bytes, i, out var json);
                     
-                    Debug.Log($"Received: {data}");
-
-                    // Process the data sent by the client.
-                    data = data.ToUpper();
-
-                    byte[] msg = System.Text.Encoding.UTF8.GetBytes(data);
-
-                    // Send back a response.
+                    Encode(out var msg, await handler(json));
                     stream.Write(msg, 0, msg.Length);
-                    
-                    Debug.Log($"Sent: {data}");
                 }
 
-                // Shutdown and end connection
                 client.Close();
             }
         }
@@ -76,6 +67,30 @@ public class TCPTransport : ScriptableObject
             // Stop listening for new clients.
             server?.Stop();
         }
+    }
+
+
+    private static void Decode(ref byte[] data, int len, out JObject json)
+    {
+        json = JObject.Parse(UTF8.GetString(data, 0, len));
+        
+        Debug.Log(json.ToString());
+    }
+
+    private void Encode(out byte[] msg, in JObject json)
+    {
+        Debug.Log(json.ToString());
+        
+        msg = UTF8.GetBytes(json.ToString());
+    }
+    
+    
+    
+    
+
+    public void DeInit()
+    {
+        _cts.Cancel();
     }
         
 }
