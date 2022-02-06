@@ -286,13 +286,10 @@ cython_debug/
 #  option (not recommended) you can uncomment the following to ignore the entire idea folder.
 #.idea/
 
-<<<<<<< HEAD
-crypto keys
+# crypto keys
 *.pem
 
-tts processing results
+# tts processing results
 speech/
-=======
 
 /python-*
->>>>>>> dev

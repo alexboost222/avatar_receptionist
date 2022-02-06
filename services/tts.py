@@ -1,16 +1,21 @@
-import time
-import jwt
-import requests
+from transport import Transport
+import sys
 import json
+import requests
+import jwt
+import time
 
-CONFIG_FILE_RELATIVE_PATH = "config.pem"
+ROOT = "./services/tts"
+CONFIG_FILE_RELATIVE_PATH = f"{ROOT}/config.pem"
+OAUTH_PRIVATE_KEY_FILE_PATH = f"{ROOT}/private.pem"
+SPEECH_FOLDER_PATH = f"{ROOT}/speech"
+
 SERVICE_ACCOUNT_ID_KEY = "service_account_id"
 OAUTH_KEY_ID_KEY = "key_id"
-
-IAM_TOKEN_CREATE_URL = "https://iam.api.cloud.yandex.net/iam/v1/tokens"
 IAM_TOKEN_KEY = "iamToken"
 IAM_TOKEN_EXPIRES_AT_KEY = "expiresAt"
 
+IAM_TOKEN_CREATE_URL = "https://iam.api.cloud.yandex.net/iam/v1/tokens"
 SYNTHESIZE_SPEECH_URL = "https://tts.api.cloud.yandex.net/speech/v1/tts:synthesize"
 
 NEXT_DEFAULT = "none"
@@ -18,9 +23,11 @@ NEXT_DEFAULT = "none"
 service_account_id = ""
 oauth_key_id = ""
 
+setup_dirty_flag = False
+
 # TODO switch to json config file
 def setup_config():
-    # TODO rewrite gloabl to smth better
+    # TODO rewrite global to smth better
     global service_account_id
     global oauth_key_id
 
@@ -36,7 +43,7 @@ def setup_config():
             oauth_key_id = oauth_key_id_line.strip().split()[1]
 
 def get_auth_jwt():
-    with open("private.pem", "r") as private:
+    with open(OAUTH_PRIVATE_KEY_FILE_PATH, "r") as private:
         private_key = private.read() # Reading the private key from the file.
 
     now = int(time.time())
@@ -65,7 +72,7 @@ def create_iam_token(auth_jwt):
     expires_at = response_json.get(IAM_TOKEN_EXPIRES_AT_KEY)
     return (iam_token, expires_at)
 
-def synthesize(text, iam_token):
+def synthesize(text, emotion, iam_token):
     headers = {
         "Authorization": f"Bearer {iam_token}",
     }
@@ -74,20 +81,38 @@ def synthesize(text, iam_token):
         "text": text,
         "lang": "ru-RU",
         "speed": 1.0,
-        "emotion": "evil",
+        "emotion": emotion,
     }
 
-    resp = requests.post(SYNTHESIZE_SPEECH_URL, headers=headers, data=data, stream=True)
-    if resp.status_code != 200:
-        raise RuntimeError("Invalid response received: code: %d, message: %s" % (resp.status_code, resp.text))
-    with open("speech/syn_result.ogg", "wb") as syn_result:
-        syn_result.write(resp.content)
+    response = requests.post(SYNTHESIZE_SPEECH_URL, headers=headers, data=data, stream=True)
+    if response.status_code != 200:
+        raise RuntimeError("Invalid response received: code: %d, message: %s" % (response.status_code, response.text))
+    
+    return response.content
 
-def main():
-    setup_config()
+def handle(input):
+    # TODO use class and methods instead of functions
+    global setup_dirty_flag
+
+    if not setup_dirty_flag:
+        setup_config()
+        setup_dirty_flag = True
+    
+    text = input["msg"]
     auth_jwt = get_auth_jwt()
+    # TODO use expires at
     (iam_token, expires_at) = create_iam_token(auth_jwt)
-    synthesize("Ты че, пес, ты че!", iam_token)
+    synt_result = synthesize(text, "good", iam_token)
 
-if __name__ == "__main__":
-    main()
+    synt_file_path = f"{SPEECH_FOLDER_PATH}/{hash(text)}.ogg"
+
+    with open(synt_file_path, "wb") as syn_result:
+        syn_result.write(synt_result)
+
+    return { "avatar_speech_filepath": syn_result }
+
+t = Transport(handle, "tts")
+
+t.arg_parse(sys.argv)
+
+t.work()
