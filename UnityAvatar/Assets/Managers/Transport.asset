@@ -12,3 +12,5 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: be3a33edaa41049a3bae32e2d778aca7, type: 3}
   m_Name: Transport
   m_EditorClassIdentifier: 
+  ip: 127.0.0.1
+  port: 13000

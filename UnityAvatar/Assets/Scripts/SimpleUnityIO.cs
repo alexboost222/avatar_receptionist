@@ -1,21 +1,48 @@
-using System.Threading.Tasks;
+using System.Collections.Generic;
 using Cysharp.Threading.Tasks;
 using Newtonsoft.Json.Linq;
+using TMPro;
 using UnityEngine;
 
 public class SimpleUnityIO : MonoBehaviour
 {
     public TCPTransport transport;
 
-    private void Start()
+    public TextMeshProUGUI text;
+    public TMP_InputField inputField;
+
+    private void OnEnable()
     {
-        UniTask.Run(async () => await transport.Init(HandleInput));
+        transport.Init(async inp => await HandleInput(inp));
+        
+        _mq = new Queue<string>();
     }
 
-    public async UniTask<JObject> HandleInput(JObject str)
-    {
-        await UniTask.Delay(1000);
 
-        return str;
+    private void OnDisable()
+    {
+        transport.DeInit();
+    }
+
+
+    public void EnqueueMessage()
+    {
+        _mq.Enqueue(inputField.text);
+        inputField.text = "";
+    }
+
+    private Queue<string> _mq;
+
+
+    public async UniTask<JObject> HandleInput(JObject inp)
+    {
+        text.text = inp["msg"].Value<string>();
+        
+        await UniTask.WaitUntil(() => _mq.Count != 0);
+
+        return new JObject
+        {
+            ["msg"] = _mq.Dequeue()
+        };
     }
 }
