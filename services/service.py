@@ -1,5 +1,5 @@
 import json
-import os, errno, subprocess
+import subprocess
 import socket
 
 class Service:
