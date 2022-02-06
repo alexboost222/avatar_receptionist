@@ -16,19 +16,19 @@ parser.add_argument('--no-unity', help="Dry run without unity", action='store_tr
 args = parser.parse_args()
 
 def init():
-    cog_model = Service("cog-model")
+    cog_model = Service("localhost", "8085")
     cog_model.run([args.python, "services/cog_model.py"])
 
     print("CogModel initialized")
 
     if args.text_to_speech:
-        tts = Service("tts")
+        tts = Service("localhost", "8086")
         tts.run([args.python, "services/tts.py"])
 
         print("Text to speech initialized")
 
     if not args.no_unity:
-        unity = Service("unity")
+        unity = Service("localhost", "8087")
         unity.run()
 
         print("Unity initialized")
@@ -74,5 +74,5 @@ def socket_listen():
 
 
 if __name__ == "__main__":
-    socket_listen()
-#    init()
+#    socket_listen()
+    init()

@@ -1,60 +1,40 @@
 import json
 import os, errno, subprocess
+import socket
 
 class Service:
+    ENCODING = "utf-8"
 
-    def __init__(self, name):
-        self.service_name = name
-
-    @property
-    def name(self):
-        return self.service_name
-
-    @property
-    def in_pipe_name(self):
-        return f"pipes/{self.service_name}-in"
+    def __init__(self, host, port):
+        self.host = host
+        self.port = port
+        self.s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 
     @property
-    def out_pipe_name(self):
-        return f"pipes/{self.service_name}-out"
-
-    def make_pipe(self, fifo):
-        if not os.path.exists("pipes/"):
-            os.mkdir("pipes/")
-        try:
-            os.mkfifo(fifo)
-        except OSError as oe: 
-            if oe.errno != errno.EEXIST:
-                raise
-
-
-    def initialize_pipes(self):
-        self.make_pipe(self.in_pipe_name)
-        self.make_pipe(self.out_pipe_name)
-
-        self.in_pipe = open(self.in_pipe_name, "w")
-        self.out_pipe = open(self.out_pipe_name, "r")
-
-    @property
-    def build_pipes_args(self):
-        return ["in-pipe", self.in_pipe_name, 
-                "out-pipe", self.out_pipe_name]
+    def build_args(self):
+        return ["--host", self.host, "--port", self.port]
 
     def run(self, args=None):
         if args != None:
-            subprocess.Popen(args + self.build_pipes_args)
+            subprocess.Popen(args + self.build_args)
 
-        self.initialize_pipes()
+        self.s.connect((self.host, int(self.port)))
+
 
     def get(self, j_input):
-        self.in_pipe.writelines([json.dumps(j_input) + "\n"])
-        self.in_pipe.flush()
-        return json.loads(self.out_pipe.readline())
+        request = json.dumps(j_input)
+        
+        self.s.send(request.encode(self.ENCODING))
+    
+        response = self.s.recv(1024).decode(self.ENCODING)
 
+        return json.loads(response)
 
     def stop(self):
-        self.out_pipe.close()
-        self.in_pipe.close()
+        if self.s != None:
+            self.s.close()
+
+        self.s = None
 
     def __del__(self):
         self.stop()
