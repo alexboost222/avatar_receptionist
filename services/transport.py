@@ -1,12 +1,17 @@
 import json
-import posixpath, subprocess
+import subprocess
+import os
 
 
 class Transport:
-    logs_path = "/"
+    logs_path = "./logs"
 
     def __init__(self, main_method, name="some-name"):
-        self.log_file = open(name + ".log", "w+")
+
+        if not os.path.exists(self.logs_path):
+            os.makedirs(self.logs_path)
+
+        self.log_file = open(f"{self.logs_path}/{name}.log", "w+")
         self.main_method = main_method
 
     def log(self, text):
