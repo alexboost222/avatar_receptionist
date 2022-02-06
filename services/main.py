@@ -1,35 +1,55 @@
 import json
-import sys
+import sys, copy
 from service import Service
 import argparse
 
 
-parser = argparse.ArgumentParser(description='Run unity avatar with')
-parser.add_argument('integers', metavar='N', type=int, nargs='+',
-                    help='an integer for the accumulator')
-parser.add_argument('--sum', dest='accumulate', action='store_const',
-                    const=sum, default=max,
-                    help='sum the integers (default: find the max)')
+parser = argparse.ArgumentParser(description='Run unity avatar with python services.')
+parser.add_argument('-p', '--python', help="Path to python executeable", type=str, required=True)
+parser.add_argument('-tts', '--text-to-speech', help="Is text to speech enabled", action='store_true')
+parser.add_argument('-we', '--webcam-emotions', help="Is text to webcam emotion recognition enabled", action='store_true')
+parser.add_argument('-stt', '--speech-to-text', help="Is text to speech recognition enabled", action='store_true')
+parser.add_argument('--no-unity', help="Dry run without unity", action='store_true')
+
 
 args = parser.parse_args()
 
+def init():
+    cog_model = Service("cog-model")
+    cog_model.run([args.python, "services/cog_model.py"])
 
+    if args.text_to_speech:
+        tts = Service("tts")
+        tts.run([args.python, "services/tts.py"])
 
-def init(python_path):
-    tts = Service("tts")
+    if not args.no_unity:
+        unity = Service("unity")
+        unity.run()
 
-    tts.run([python_path, "services/tts.py"])
-    # tts.run()
+    from_unity = {"start_flag": True, "msg": "Startup"}
+    to_unity = {}
 
-    inp = input("Svc input: ")
+    while "stop_flag" not in from_unity and "stop_flag" not in to_unity:
+        to_unity = cog_model.get(from_unity)
 
-    while(inp != 'q'):
-        out = tts.get({"msg": inp})
-        print("Svc output: " + json.dumps(out))
-        inp = input("Svc input: ")
+        if "stop_flag" not in to_unity:
+            break
 
-    tts.stop()
+        if args.text_to_speech:
+            to_unity.update(tts.get(to_unity))
+
+        if not args.no_unity:
+            from_unity = unity.get(to_unity)
+        else:
+            from_unity = copy.deepcopy(to_unity)
+
+    cog_model.stop()
+    if not args.no_unity:
+        unity.stop()
+    if args.text_to_speech:
+        tts.stop()
+    
 
 
 if __name__ == "__main__":
-    init(sys.argv[2])
+    init()
