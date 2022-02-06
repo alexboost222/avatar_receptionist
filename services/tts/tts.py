@@ -5,7 +5,7 @@ import json
 def kek(inp):
     return { "answer": inp["msg"] }
 
-t = Transport(kek)
+t = Transport(kek, "tts")
 
 t.arg_parse(sys.argv)
 
