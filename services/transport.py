@@ -5,6 +5,7 @@ import socket
 
 class Transport:
     ENCODING = "utf-8"
+    BUFFER_SIZE = 2048
     LOGS_PATH = "./logs"
 
     def __init__(self, main_method, name="some-name"):
@@ -40,7 +41,7 @@ class Transport:
                     self.log(f"Connected by {addr}")
                     while True:
                         # TODO make buffer size variable
-                        data = conn.recv(1024)
+                        data = conn.recv(self.BUFFER_SIZE)
 
                         if not data:
                             break
@@ -49,4 +50,3 @@ class Transport:
                         response = json.dumps(self.main_method(json.loads(request)))
 
                         conn.sendall(response.encode(self.ENCODING))
-
