@@ -12,13 +12,15 @@ class Service:
 
     @property
     def in_pipe_name(self):
-        return self.service_name + "-in"
+        return f"pipes/{self.service_name}-in"
 
     @property
     def out_pipe_name(self):
-        return self.service_name + "-out"
+        return f"pipes/{self.service_name}-out"
 
     def make_pipe(self, fifo):
+        if not os.path.exists("pipes/"):
+            os.mkdir("pipes/")
         try:
             os.mkfifo(fifo)
         except OSError as oe: 
