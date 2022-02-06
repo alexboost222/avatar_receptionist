@@ -1,11 +1,25 @@
 import json
+import sys
 from service import Service
+import argparse
 
-def init():
+
+parser = argparse.ArgumentParser(description='Run unity avatar with')
+parser.add_argument('integers', metavar='N', type=int, nargs='+',
+                    help='an integer for the accumulator')
+parser.add_argument('--sum', dest='accumulate', action='store_const',
+                    const=sum, default=max,
+                    help='sum the integers (default: find the max)')
+
+args = parser.parse_args()
+
+
+
+def init(python_path):
     tts = Service("tts")
 
-    # tts.run(["python", "tts.py"])
-    tts.run()
+    tts.run([python_path, "services/tts.py"])
+    # tts.run()
 
     inp = input("Svc input: ")
 
@@ -17,6 +31,5 @@ def init():
     tts.stop()
 
 
-
 if __name__ == "__main__":
-    init()
+    init(sys.argv[2])

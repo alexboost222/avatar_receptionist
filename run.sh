@@ -1,0 +1,1 @@
+./python-macos/bin/python services/main.py
