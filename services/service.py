@@ -1,9 +1,10 @@
 import json
-import os, errno, subprocess
+import subprocess
 import socket
 
 class Service:
     ENCODING = "utf-8"
+    BUFFER_SIZE = 2048
 
     def __init__(self, host, port):
         self.host = host
@@ -26,7 +27,7 @@ class Service:
         
         self.s.send(request.encode(self.ENCODING))
     
-        response = self.s.recv(1024).decode(self.ENCODING)
+        response = self.s.recv(self.BUFFER_SIZE).decode(self.ENCODING)
 
         return json.loads(response)
 
