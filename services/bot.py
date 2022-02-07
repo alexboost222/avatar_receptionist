@@ -1,65 +1,77 @@
-import logging
+import requests
+import json
+from transport import Transport
+import sys
 
-from telegram.ext import Updater, CommandHandler, MessageHandler, Filters
+TOKEN = ""
 
-# Enable logging
-logging.basicConfig(format="%(asctime)s - %(name)s - %(levelname)s - %(message)s",
-                    level=logging.INFO)
-
-logger = logging.getLogger(__name__)
+with(open("./services/bot/token.pem")) as token_file:
+    TOKEN = token_file.read()
 
 CHAT_ID = "-648360876"
+BOT_URL = f"https://api.telegram.org/bot{TOKEN}"
+QUESTION_COMMAND = "/q"
+SEND_MESSAGE_URL = f"{BOT_URL}/sendMessage"
+GET_UPDATES_URL = f"{BOT_URL}/getUpdates"
 
-# Define a few command handlers. These usually take the two arguments update and
-# context. Error handlers also receive the raised TelegramError object in error.
-def start(update, context):
-    """Send a message when the command /start is issued."""
-    update.message.reply_text("Hi!")
+def handle(input):
+    response = requests.post(f"{SEND_MESSAGE_URL}?chat_id={CHAT_ID}&text={input['msg']}")
+    decoded_response = response.content.decode("UTF-8")
+    response_json = json.loads(decoded_response)
 
+    sent_timestamp = 0
+    
+    if response_json["ok"]:
+        sent_timestamp = response_json["result"]["date"]
+    else:
+        return { "msg": "Ошибка отправки сообщения в телеграм!" }
 
-def help(update, context):
-    """Send a message when the command /help is issued."""
-    update.message.reply_text("Help!")
+    params = { "limit" : 1, "timeout": 10, "allowed_updates": "message" }
 
+    msg = ""
+    prev_response_json = None
 
-def echo(update, context):
-    """Echo the user message."""
-    update.message.reply_text(update.message.text)
+    while True:
+        response = requests.get(GET_UPDATES_URL, params=json.dumps(params))
+        decoded_response = response.content.decode("UTF-8")
+        response_json = json.loads(decoded_response)
+        valid_updates = [u for u in response_json["result"] if validate_update(u, sent_timestamp)]
+        
+        a, b = json.dumps(response_json, sort_keys=True), json.dumps(prev_response_json, sort_keys=True)
 
+        if len(valid_updates) != 0:
+            msg = " ".join(valid_updates[-1]["message"]["text"].split()[1:])
+            break
+        elif prev_response_json != None and a != b:
+            requests.post(f"{SEND_MESSAGE_URL}?chat_id={CHAT_ID}&text=Ожидается сообщение в формате '/q <Teкcт>'")
 
-def error(update, context):
-    """Log Errors caused by Updates."""
-    logger.warning(f"Update {update} caused error {context.error}")
+        prev_response_json = response_json
 
-def main():
-    """Start the bot."""
-    # Create the Updater and pass it your bot"s token.
-    # Make sure to set use_context=True to use the new context based callbacks
-    # Post version 12 this will no longer be necessary
-    with(open("./services/bot/token.pem", "r")) as token_file:
-        token = token_file.read()
+    return { "msg": msg }
 
-    updater = Updater(token, use_context=True)
+def validate_update(update_to_validate, sent_timestamp):
+    if not "message" in update_to_validate:
+        return False
 
-    # Get the dispatcher to register handlers
-    dp = updater.dispatcher
+    if f"{update_to_validate['message']['chat']['id']}" != CHAT_ID:
+        return False
 
-    # on different commands - answer in Telegram
-    dp.add_handler(CommandHandler("start", start))
-    dp.add_handler(CommandHandler("help", help))
+    if not "entities" in update_to_validate["message"]:
+        return False
 
-    # on noncommand i.e message - echo the message on Telegram
-    dp.add_handler(MessageHandler(Filters.text, echo))
+    if not any(e["type"] == "bot_command" for e in update_to_validate["message"]["entities"]):
+        return False
 
-    # log all errors
-    dp.add_error_handler(error)
+    if len(update_to_validate["message"]["text"].split()) < 2:
+        return False
+    
+    if update_to_validate["message"]["date"] < sent_timestamp:
+        return False
 
-    # Start the Bot
-    updater.start_polling()
+    return True
 
-    updater.idle()
+t = Transport(handle, "bot")
 
+t.arg_parse(sys.argv)
 
-if __name__ == "__main__":
-    main()
-    print("lol")
+t.work()

@@ -15,7 +15,7 @@ args = parser.parse_args()
 
 def init():
     cog_model = Service("localhost", "8085")
-    cog_model.run([args.python, "services/cog_model.py"])
+    cog_model.run([args.python, "services/bot.py"])
 
     print("CogModel initialized")
 

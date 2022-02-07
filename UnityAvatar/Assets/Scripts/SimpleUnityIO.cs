@@ -13,10 +13,10 @@ public class SimpleUnityIO : MonoBehaviour
     public TextMeshProUGUI text;
     public TMP_InputField inputField;
 
-    private void OnEnable()
+    /*private void OnEnable()
     {
         UniTask.Run(async () => await playAudioFromPath.PlayClip("/Users/stasiandr/GithubRepo/avatar_receptionist/test.raw"));
-    }
+    }*/
 
 
     private void OnDisable()
