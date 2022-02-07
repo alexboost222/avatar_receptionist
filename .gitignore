@@ -294,3 +294,8 @@ speech/
 
 /python-*
 /pipes*
+
+UnityAvatar/Assets/Samples*
+UnityAvatar/Assets/Samples.meta
+UnityAvatar/Assets/Samples
+UnityAvatar/Assets/Samples/
