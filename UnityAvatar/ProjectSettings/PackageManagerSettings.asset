@@ -35,29 +35,28 @@ MonoBehaviour:
     - com.openupm
     m_IsDefault: 0
     m_Capabilities: 0
-  m_UserSelectedRegistryName: 
+  - m_Id: scoped:HECOMI
+    m_Name: HECOMI
+    m_Url: https://registry.npmjs.com
+    m_Scopes:
+    - com.hecomi
+    m_IsDefault: 0
+    m_Capabilities: 0
+  m_UserSelectedRegistryName: HECOMI
   m_UserAddingNewScopedRegistry: 0
   m_RegistryInfoDraft:
     m_ErrorMessage: 
     m_Original:
-      m_Id: scoped:package.openupm.com
-      m_Name: package.openupm.com
-      m_Url: https://package.openupm.com
+      m_Id: scoped:HECOMI
+      m_Name: HECOMI
+      m_Url: https://registry.npmjs.com
       m_Scopes:
-      - com.cysharp.unitask
-      - com.demigiant.dotween
-      - com.github.superunitybuild.buildactions
-      - com.github.superunitybuild.buildtool
-      - com.openupm
+      - com.hecomi
       m_IsDefault: 0
       m_Capabilities: 0
     m_Modified: 0
-    m_Name: package.openupm.com
-    m_Url: https://package.openupm.com
+    m_Name: HECOMI
+    m_Url: https://registry.npmjs.com
     m_Scopes:
-    - com.cysharp.unitask
-    - com.demigiant.dotween
-    - com.github.superunitybuild.buildactions
-    - com.github.superunitybuild.buildtool
-    - com.openupm
+    - com.hecomi
     m_SelectedScopeIndex: 0
