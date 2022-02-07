@@ -1,44 +1,12 @@
 fileFormatVersion: 2
-guid: 105fee5924fe8416283c8cbc13a67526
+guid: 0d03ee7af8bdd48c391c05c57ad85bca
 ModelImporter:
   serializedVersion: 20200
-  internalIDToNameTable: []
-  externalObjects:
+  internalIDToNameTable:
   - first:
-      type: UnityEngine:Material
-      assembly: UnityEngine.CoreModule
-      name: MikeAlger_Material
-    second: {fileID: 2100000, guid: 41ff9c663ede94391ba67a3a7ae2b800, type: 2}
-  - first:
-      type: UnityEngine:Material
-      assembly: UnityEngine.CoreModule
-      name: MikeAlger_Material.1
-    second: {fileID: 2100000, guid: 41ff9c663ede94391ba67a3a7ae2b800, type: 2}
-  - first:
-      type: UnityEngine:Material
-      assembly: UnityEngine.CoreModule
-      name: MikeAlger_Material.2
-    second: {fileID: 2100000, guid: 41ff9c663ede94391ba67a3a7ae2b800, type: 2}
-  - first:
-      type: UnityEngine:Material
-      assembly: UnityEngine.CoreModule
-      name: MikeAlger_Material.3
-    second: {fileID: 2100000, guid: 41ff9c663ede94391ba67a3a7ae2b800, type: 2}
-  - first:
-      type: UnityEngine:Material
-      assembly: UnityEngine.CoreModule
-      name: MikeAlger_Material.4
-    second: {fileID: 2100000, guid: 41ff9c663ede94391ba67a3a7ae2b800, type: 2}
-  - first:
-      type: UnityEngine:Material
-      assembly: UnityEngine.CoreModule
-      name: MikeAlger_Material.5
-    second: {fileID: 2100000, guid: 41ff9c663ede94391ba67a3a7ae2b800, type: 2}
-  - first:
-      type: UnityEngine:Material
-      assembly: UnityEngine.CoreModule
-      name: MikeAlger_Material.6
-    second: {fileID: 2100000, guid: 41ff9c663ede94391ba67a3a7ae2b800, type: 2}
+      74: -203655887218126122
+    second: mixamo.com
+  externalObjects: {}
   materials:
     materialImportMode: 2
     materialName: 0
