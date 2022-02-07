@@ -1,6 +1,7 @@
 using System;
 using System.Net;
 using System.Net.Sockets;
+using System.Text;
 using System.Threading;
 using Cysharp.Threading.Tasks;
 using Newtonsoft.Json.Linq;
@@ -10,10 +11,10 @@ using static System.Text.Encoding;
 [CreateAssetMenu]
 public class TCPTransport : ScriptableObject
 {
-    private const int BufferLength = 1024 * 2;
+    private const int BufferLength = 2048;
     
-    public string ip;
-    public int port;
+    [SerializeField] private string ip;
+    [SerializeField] private int port;
 
     private CancellationTokenSource _cts;
     
@@ -24,12 +25,12 @@ public class TCPTransport : ScriptableObject
         UniTask.Run(async () => await StartServer(handler), cancellationToken: _cts.Token);
     }
 
-
     private async UniTask StartServer(Func<JObject, UniTask<JObject>> handler)
     {
         await UniTask.SwitchToMainThread();
 
         TcpListener server=null;
+        
         try
         {
             server = new TcpListener(IPAddress.Parse(ip), port);
@@ -64,33 +65,26 @@ public class TCPTransport : ScriptableObject
         }
         finally
         {
-            // Stop listening for new clients.
             server?.Stop();
         }
     }
 
-
-    private static void Decode(ref byte[] data, int len, out JObject json)
-    {
-        json = JObject.Parse(UTF8.GetString(data, 0, len));
-        
-        Debug.Log(json.ToString());
-    }
-
-    private void Encode(out byte[] msg, in JObject json)
+    private static void Encode(out byte[] msg, in JObject json)
     {
         Debug.Log(json.ToString());
         
         msg = UTF8.GetBytes(json.ToString());
     }
     
+    private static void Decode(ref byte[] data, int len, out JObject json)
+    {
+        json = JObject.Parse(UTF8.GetString(data, 0, len));
+        
+        Debug.Log(json.ToString());
+    }
     
-    
-    
-
     public void DeInit()
     {
         _cts.Cancel();
     }
-        
 }

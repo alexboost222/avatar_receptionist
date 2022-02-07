@@ -7,25 +7,15 @@ using UnityEngine.Networking;
 
 public class PlayAudioFromPath : MonoBehaviour
 {
-    [SerializeField]
-    private AudioSource source;
-
-
-    public const int SampleRate = 48000;
-    private const int BufferSize = 10000;
-//    private float[] _buffer;
-
-    private void Awake()
-    {
-//        _buffer = new float[BufferSize];
-    }
+    private const int SampleRate = 48000;
+    
+    [SerializeField] private AudioSource source;
 
     public async UniTask PlayClip(string fullPath)
     {
         await UniTask.SwitchToMainThread();
         
-        var _buffer = File.ReadAllBytes(fullPath);
-
+        var buffer = File.ReadAllBytes(fullPath);
         
         MemoryStream memoryStream = new MemoryStream();
         memoryStream.SetLength(0);
@@ -35,7 +25,7 @@ public class PlayAudioFromPath : MonoBehaviour
         Encoding encoding = Encoding.ASCII;
  
         memoryStream.Write(encoding.GetBytes("RIFF"), 0, 4);
-        memoryStream.Write(BitConverter.GetBytes(44 + _buffer.Length - 8), 0, 4);
+        memoryStream.Write(BitConverter.GetBytes(44 + buffer.Length - 8), 0, 4);
         memoryStream.Write(encoding.GetBytes("WAVE"), 0, 4);
         memoryStream.Write(encoding.GetBytes("fmt "), 0, 4);
         memoryStream.Write(BitConverter.GetBytes(16), 0, 4);
@@ -46,9 +36,9 @@ public class PlayAudioFromPath : MonoBehaviour
         memoryStream.Write(BitConverter.GetBytes((short)sampleBytes), 0, 2);
         memoryStream.Write(BitConverter.GetBytes((short)sampleBits), 0, 2);
         memoryStream.Write(encoding.GetBytes("data"), 0, 4);
-        memoryStream.Write(BitConverter.GetBytes(_buffer.Length), 0, 4);
+        memoryStream.Write(BitConverter.GetBytes(buffer.Length), 0, 4);
         
-        memoryStream.Write(_buffer, 0, _buffer.Length);
+        memoryStream.Write(buffer, 0, buffer.Length);
         
         memoryStream.WriteTo(new FileStream(fullPath.Replace(".raw", ".wav"), FileMode.OpenOrCreate));
         
@@ -70,14 +60,4 @@ public class PlayAudioFromPath : MonoBehaviour
         
         source.Play();
     }
-
-    // private void OnAudioRead(float[] data)
-    // {
-    //     int count = 0;
-    //     while (count < data.Length)
-    //     {
-    //         data[count] = _buffer[count] * 1000;
-    //         count++;
-    //     }
-    // }
 }

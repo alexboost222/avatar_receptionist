@@ -4,8 +4,9 @@ import json
 import requests
 import jwt
 import time
+import os
 
-ROOT = "./services/tts"
+ROOT = "services/tts"
 CONFIG_FILE_RELATIVE_PATH = f"{ROOT}/config.pem"
 OAUTH_PRIVATE_KEY_FILE_PATH = f"{ROOT}/private.pem"
 SPEECH_FOLDER_PATH = f"{ROOT}/speech"
@@ -82,6 +83,8 @@ def synthesize(text, emotion, iam_token):
         "lang": "ru-RU",
         "speed": 1.0,
         "emotion": emotion,
+        "format": "lpcm",
+        "sampleRateHertz": 48000,
     }
 
     response = requests.post(SYNTHESIZE_SPEECH_URL, headers=headers, data=data, stream=True)
@@ -104,7 +107,8 @@ def handle(input):
     (iam_token, expires_at) = create_iam_token(auth_jwt)
     synt_result = synthesize(text, "good", iam_token)
 
-    synt_file_path = f"{SPEECH_FOLDER_PATH}/{hash(text)}.ogg"
+    synt_file_path = f"{SPEECH_FOLDER_PATH}/{hash(text)}.raw"
+    synt_file_path = os.path.abspath(synt_file_path)
 
     with open(synt_file_path, "wb") as syn_result:
         syn_result.write(synt_result)
