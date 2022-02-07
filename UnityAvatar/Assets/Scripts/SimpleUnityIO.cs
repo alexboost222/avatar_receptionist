@@ -7,15 +7,15 @@ using UnityEngine;
 public class SimpleUnityIO : MonoBehaviour
 {
     public TCPTransport transport;
+    public PlayAudioFromPath playAudioFromPath;
+    
 
     public TextMeshProUGUI text;
     public TMP_InputField inputField;
 
     private void OnEnable()
     {
-        transport.Init(async inp => await HandleInput(inp));
-        
-        _mq = new Queue<string>();
+        UniTask.Run(async () => await playAudioFromPath.PlayClip("/Users/stasiandr/GithubRepo/avatar_receptionist/test.raw"));
     }
 
 
@@ -25,7 +25,7 @@ public class SimpleUnityIO : MonoBehaviour
     }
 
 
-    public void EnqueueMessage()
+    /*public void EnqueueMessage()
     {
         _mq.Enqueue(inputField.text);
         inputField.text = "";
@@ -44,5 +44,5 @@ public class SimpleUnityIO : MonoBehaviour
         {
             ["msg"] = _mq.Dequeue()
         };
-    }
+    }*/
 }
