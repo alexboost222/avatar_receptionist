@@ -9,26 +9,28 @@ parser.add_argument('-tts', '--text-to-speech', help="Is text to speech enabled"
 parser.add_argument('-we', '--webcam-emotions', help="Is text to webcam emotion recognition enabled", action='store_true')
 parser.add_argument('-stt', '--speech-to-text', help="Is text to speech recognition enabled", action='store_true')
 parser.add_argument('--no-unity', help="Dry run without unity", action='store_true')
+parser.add_argument('-tb', '--telegram-bot', help="Switch from console cognition model emulator to telegram bot", action='store_true')
 
 
 args = parser.parse_args()
 
 def init():
     cog_model = Service("localhost", "8085")
-    cog_model.run([args.python, "services/bot.py"])
-
-    print("CogModel initialized")
+    if args.telegram_bot:
+        cog_model.run([args.python, "services/bot.py"])
+        print("Telegram bot CogModel initialized")
+    else:
+        cog_model.run([args.python, "services/cog_model.py"])
+        print("Console CogModel initialized")
 
     if args.text_to_speech:
         tts = Service("localhost", "8086")
         tts.run([args.python, "services/tts.py"])
-
         print("Text to speech initialized")
 
     if not args.no_unity:
         unity = Service("localhost", "8087")
         unity.run()
-
         print("Unity initialized")
 
     from_unity = {"start_flag": True, "msg": "Startup"}

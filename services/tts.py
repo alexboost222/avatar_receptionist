@@ -85,6 +85,7 @@ def synthesize(text, emotion, iam_token):
         "emotion": emotion,
         "format": "lpcm",
         "sampleRateHertz": 48000,
+        "voice": "ermil:rc",
     }
 
     response = requests.post(SYNTHESIZE_SPEECH_URL, headers=headers, data=data, stream=True)
