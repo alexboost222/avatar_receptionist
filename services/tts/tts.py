@@ -1,9 +1,10 @@
-from enum import Enum
 import json
+from tarfile import ENCODING
 import requests
 import jwt
 import time
 import os
+import zmq
 
 TTS_FOLDER = os.path.dirname(os.path.abspath(__file__))
 
@@ -20,6 +21,8 @@ IAM_TOKEN_EXPIRES_AT_KEY = "expiresAt"
 
 IAM_TOKEN_CREATE_URL = "https://iam.api.cloud.yandex.net/iam/v1/tokens"
 SYNTHESIZE_SPEECH_URL = "https://tts.api.cloud.yandex.net/speech/v1/tts:synthesize"
+
+ENCODING = "utf-8"
 
 # TODO switch to json config file
 def _get_auth_info():
@@ -84,10 +87,16 @@ def _synthesize(text, format, iam_token):
     }
 
     response = requests.post(SYNTHESIZE_SPEECH_URL, headers=headers, data=data, stream=True)
+
+    result = { "ok": True, "response": bytes("", encoding="UTF-8"), "error": "" }
+
     if response.status_code != 200:
-        raise RuntimeError("Invalid response received: code: %d, message: %s" % (response.status_code, response.text))
-    
-    return response.content
+        result["ok"] = False
+        result["error"] = "Invalid response received: code: %d, message: %s" % (response.status_code, response.text)
+    else:
+        result["response"] = response.content
+
+    return result
 
 def handle(input):
     (service_account_id, oauth_key_id) = _get_auth_info()
@@ -98,13 +107,34 @@ def handle(input):
     text = input["msg"]
     synt_result = _synthesize(text, "oggopus", iam_token)
 
-    synt_file_path = f"{SPEECH_DIRECTORY_PATH}/{hash(text)}.ogg"
-    synt_file_path = os.path.abspath(synt_file_path)
+    result = { "ok": True, "response": "", "error": "" }
 
-    with open(synt_file_path, "wb") as syn_result:
-        syn_result.write(synt_result)
+    if (synt_result["ok"]):
+        synt_file_path = f"{SPEECH_DIRECTORY_PATH}/{hash(text)}.ogg"
+        synt_file_path = os.path.abspath(synt_file_path)
 
-    return { "avatar_speech_filepath": synt_file_path }
+        with open(synt_file_path, "wb") as syn_result:
+            syn_result.write(synt_result["response"])
 
-print(__file__)
-handle({ "msg": "Привет!"})
+        result["response"] = synt_file_path
+    else:
+        result["ok"] = False
+        result["error"] = synt_result["error"]
+    
+    return result
+
+if __name__ == "__main__":
+    context = zmq.Context()
+    socket = context.socket(zmq.REP)
+    socket.bind("tcp://*:5555")
+
+    while True:
+        #  Wait for next request from client
+        message = socket.recv()
+        print(f"Received request: {message} typeof {type(message)}")
+
+        #  Do some 'work'
+        result = handle(json.loads(message.decode(ENCODING)))
+
+        #  Send reply back to client
+        socket.send(json.dumps(result).encode(ENCODING))
