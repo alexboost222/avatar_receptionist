@@ -24,6 +24,10 @@ SYNTHESIZE_SPEECH_URL = "https://tts.api.cloud.yandex.net/speech/v1/tts:synthesi
 
 MSG_KEY = "msg"
 
+RESULT_OK_KEY = "ok"
+RESULT_RESPONSE_KEY = "response"
+RESULT_ERROR_KEY = "error"
+
 ENCODING = "utf-8"
 
 # TODO switch to json config file
@@ -90,13 +94,13 @@ def _synthesize(text, format, iam_token):
 
     response = requests.post(SYNTHESIZE_SPEECH_URL, headers=headers, data=data, stream=True)
 
-    result = { "ok": True, "response": bytes("", encoding="UTF-8"), "error": "" }
+    result = { RESULT_OK_KEY: True, RESULT_RESPONSE_KEY: bytes("", encoding="UTF-8"), RESULT_ERROR_KEY: "" }
 
     if response.status_code != 200:
-        result["ok"] = False
-        result["error"] = "Invalid response received: code: %d, message: %s" % (response.status_code, response.text)
+        result[RESULT_OK_KEY] = False
+        result[RESULT_ERROR_KEY] = "Invalid response received: code: %d, message: %s" % (response.status_code, response.text)
     else:
-        result["response"] = response.content
+        result[RESULT_RESPONSE_KEY] = response.content
 
     return result
 
@@ -106,27 +110,27 @@ def handle(input):
     # TODO use expires at
     (iam_token, expires_at) = _get_iam_token(auth_jwt)
 
-    result = { "ok": True, "response": "", "error": "" }
+    result = { RESULT_OK_KEY: True, RESULT_RESPONSE_KEY: bytes("", encoding="UTF-8"), RESULT_ERROR_KEY: "" }
 
     if not MSG_KEY in input:
-        result["ok"] = False
-        result["error"] = f"The key {MSG_KEY} is not in input"
+        result[RESULT_OK_KEY] = False
+        result[RESULT_ERROR_KEY] = f"The key {MSG_KEY} is not in input"
         return result
     
     text = input[MSG_KEY]
     synt_result = _synthesize(text, "oggopus", iam_token)
 
-    if (synt_result["ok"]):
+    if (synt_result[RESULT_OK_KEY]):
         synt_file_path = f"{SPEECH_DIRECTORY_PATH}/{hash(text)}.ogg"
         synt_file_path = os.path.abspath(synt_file_path)
 
         with open(synt_file_path, "wb") as syn_result:
             syn_result.write(synt_result["response"])
 
-        result["response"] = synt_file_path
+        result[RESULT_RESPONSE_KEY] = synt_file_path
     else:
-        result["ok"] = False
-        result["error"] = synt_result["error"]
+        result[RESULT_OK_KEY] = False
+        result[RESULT_ERROR_KEY] = synt_result["error"]
     
     return result
 
