@@ -22,6 +22,8 @@ IAM_TOKEN_EXPIRES_AT_KEY = "expiresAt"
 IAM_TOKEN_CREATE_URL = "https://iam.api.cloud.yandex.net/iam/v1/tokens"
 SYNTHESIZE_SPEECH_URL = "https://tts.api.cloud.yandex.net/speech/v1/tts:synthesize"
 
+MSG_KEY = "msg"
+
 ENCODING = "utf-8"
 
 # TODO switch to json config file
@@ -104,10 +106,15 @@ def handle(input):
     # TODO use expires at
     (iam_token, expires_at) = _get_iam_token(auth_jwt)
 
-    text = input["msg"]
-    synt_result = _synthesize(text, "oggopus", iam_token)
-
     result = { "ok": True, "response": "", "error": "" }
+
+    if not MSG_KEY in input:
+        result["ok"] = False
+        result["error"] = f"The key {MSG_KEY} is not in input"
+        return result
+    
+    text = input[MSG_KEY]
+    synt_result = _synthesize(text, "oggopus", iam_token)
 
     if (synt_result["ok"]):
         synt_file_path = f"{SPEECH_DIRECTORY_PATH}/{hash(text)}.ogg"
